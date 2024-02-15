@@ -37,6 +37,8 @@ out/
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 
+# SonarLint plugin
+.idea/sonarlint/
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
