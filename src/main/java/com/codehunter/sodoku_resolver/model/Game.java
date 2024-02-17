@@ -182,9 +182,9 @@ public class Game {
         int colStart = node.getCol();
         int rowStart = 0;
         for (int i = rowStart; i < 9; i++) {
-                if (table[i][colStart].getValue() == 0) {
-                    list.add(table[i][colStart]);
-                }
+            if (table[i][colStart].getValue() == 0) {
+                list.add(table[i][colStart]);
+            }
         }
         return list;
     }
@@ -217,6 +217,7 @@ public class Game {
             }
         }
     }
+
     public List<Node> getMissingHorizontalNode(Node node) {
         List<Node> list = new ArrayList<>();
         int colStart = 0;
@@ -228,6 +229,7 @@ public class Game {
         }
         return list;
     }
+
     public void isOnlyPossibleValueInHorizontal(Node currentNode) {
         if (currentNode.getValue() != 0) return;
 
@@ -283,8 +285,48 @@ public class Game {
                             System.out.println(String.format("set value for node %d %d value %d", node.getRow(), node.getCol(), node.getValue()));
                             fillAllPredictList();
                         }
+                        removeDuplicateMissing(node);
                     });
         });
+    }
+
+    public void removeDuplicateMissing(Node currentNode) {
+        List<Node> missingRectangleNode = getMissingRectangleNode(currentNode);
+        if (missingRectangleNode.size() > 1) {
+            List<Integer> tempPredictList = missingRectangleNode.get(0).getPredictList();
+            boolean hasSameMissingListWithSize = true;
+            for (Node node : missingRectangleNode) {
+                if (!node.getPredictList().containsAll(tempPredictList)
+                        || node.getPredictList().containsAll(tempPredictList) && node.getPredictList().size() != tempPredictList.size()) {
+                    hasSameMissingListWithSize = false;
+                    break;
+                }
+            }
+            if (hasSameMissingListWithSize) {
+                boolean hasSameRow = missingRectangleNode.stream()
+                        .map(Node::getRow)
+                        .collect(Collectors.toSet())
+                        .size() == 1;
+                if (hasSameRow) {
+                    List<Node> missingHorizontalNode = getMissingHorizontalNode(currentNode);
+                    missingHorizontalNode.removeAll(missingRectangleNode);
+                    for(Node node : missingHorizontalNode) {
+                        node.getPredictList().removeAll(tempPredictList);
+                    }
+                }
+                boolean hasSameCol = missingRectangleNode.stream()
+                        .map(Node::getCol)
+                        .collect(Collectors.toSet())
+                        .size() == 1;
+                if (hasSameCol) {
+                    List<Node> missingVerticalNode = getMissingVerticalNode(currentNode);
+                    missingVerticalNode.removeAll(missingRectangleNode);
+                    for(Node node : missingVerticalNode) {
+                        node.getPredictList().removeAll(tempPredictList);
+                    }
+                }
+            }
+        }
     }
 
     public boolean isNotFullFill() {
