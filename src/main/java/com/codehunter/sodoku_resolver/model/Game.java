@@ -1,10 +1,6 @@
 package com.codehunter.sodoku_resolver.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Game {
@@ -42,7 +38,7 @@ public class Game {
     }
 
     public void buildTable() {
-        String[] split = this.content.split("\n");
+        String[] split = this.content.split(System.lineSeparator());
         for (int row = 0; row < split.length; row++) {
             char[] charArray = split[row].toCharArray();
             for (int col = 0; col < charArray.length; col++) {
@@ -80,6 +76,20 @@ public class Game {
         for (int i = rowStart * 3; i < rowStart * 3 + 3; i++) {
             for (int j = colStart * 3; j < colStart * 3 + 3; j++) {
                 if (table[i][j].getValue() != 0) {
+                    list.add(table[i][j]);
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Node> getMissingRectangleNode(Node node) {
+        List<Node> list = new ArrayList<>();
+        int colStart = node.getCol() / 3;
+        int rowStart = node.getRow() / 3;
+        for (int i = rowStart * 3; i < rowStart * 3 + 3; i++) {
+            for (int j = colStart * 3; j < colStart * 3 + 3; j++) {
+                if (table[i][j].getValue() == 0) {
                     list.add(table[i][j]);
                 }
             }
@@ -140,20 +150,110 @@ public class Game {
         return list;
     }
 
-    void isOnlyPossibleValueInRectangle(Node currentNode) {
+    public void isOnlyPossibleValueInRectangle(Node currentNode) {
         List<Integer> missingValues = currentNode.getPredictList();
-        List<Node> rectangleList = getRectangleNode(currentNode);
-        for(Integer value : missingValues) {
-            long numberOfPossibility = rectangleList.stream()
-                    .filter(node -> {
-                        return !currentNode.getCol().equals(node.getCol())
-                               && !currentNode.getRow().equals(node.getRow())
-                               && node.getPredictList().contains(value);
-                    })
-                    .count();
-            if (numberOfPossibility == 0) {
-                System.out.println(String.format("Crosscheck: set value for node %d %d value %d", currentNode.getRow(), currentNode.getCol(), currentNode.getValue()));
-                currentNode.setValue(value);
+        List<Node> rectangleList = getMissingRectangleNode(currentNode);
+        rectangleList.remove(currentNode);
+        HashMap<Integer, List<Node>> map = new HashMap<>();
+        for (Integer value : missingValues) {
+            List<Node> list = new ArrayList<>();
+            map.put(value, list);
+            for (Node node : rectangleList) {
+                if (node.getPredictList().stream().anyMatch(integer -> integer.equals(value))) {
+                    list.add(node);
+                }
+            }
+        }
+
+        for (Integer key : map.keySet()) {
+            if (map.get(key).size() == 0) {
+                System.out.println(String.format("Crosscheck: set value for node %d %d value %d", currentNode.getRow(), currentNode.getCol(), key));
+                currentNode.setValue(key);
+                currentNode.setPredictList(Collections.emptyList());
+                printTable();
+                fillAllPredictList();
+                return;
+            }
+        }
+    }
+
+    public List<Node> getMissingVerticalNode(Node node) {
+        List<Node> list = new ArrayList<>();
+        int colStart = node.getCol();
+        int rowStart = 0;
+        for (int i = rowStart; i < 9; i++) {
+                if (table[i][colStart].getValue() == 0) {
+                    list.add(table[i][colStart]);
+                }
+        }
+        return list;
+    }
+
+    public void isOnlyPossibleValueInVertical(Node currentNode) {
+        if (currentNode.getValue() != 0) return;
+
+        List<Integer> missingValues = currentNode.getPredictList();
+        List<Node> verticleList = getMissingVerticalNode(currentNode);
+        verticleList.remove(currentNode);
+        HashMap<Integer, List<Node>> map = new HashMap<>();
+        for (Integer value : missingValues) {
+            List<Node> list = new ArrayList<>();
+            map.put(value, list);
+            for (Node node : verticleList) {
+                if (node.getPredictList().stream().anyMatch(integer -> integer.equals(value))) {
+                    list.add(node);
+                }
+            }
+        }
+
+        for (Integer key : map.keySet()) {
+            if (map.get(key).size() == 0) {
+                System.out.println(String.format("Crosscheck Vertical: set value for node %d %d value %d", currentNode.getRow(), currentNode.getCol(), key));
+                currentNode.setValue(key);
+                currentNode.setPredictList(Collections.emptyList());
+                printTable();
+                fillAllPredictList();
+                return;
+            }
+        }
+    }
+    public List<Node> getMissingHorizontalNode(Node node) {
+        List<Node> list = new ArrayList<>();
+        int colStart = 0;
+        int rowStart = node.getRow();
+        for (int i = colStart; i < 9; i++) {
+            if (table[rowStart][i].getValue() == 0) {
+                list.add(table[rowStart][i]);
+            }
+        }
+        return list;
+    }
+    public void isOnlyPossibleValueInHorizontal(Node currentNode) {
+        if (currentNode.getValue() != 0) return;
+
+        List<Integer> missingValues = currentNode.getPredictList();
+        List<Node> verticleList = getMissingHorizontalNode(currentNode);
+        verticleList.remove(currentNode);
+        HashMap<Integer, List<Node>> map = new HashMap<>();
+        for (Integer value : missingValues) {
+            List<Node> list = new ArrayList<>();
+            map.put(value, list);
+            for (Node node : verticleList) {
+                if (node.getPredictList().stream().anyMatch(integer -> integer.equals(value))) {
+                    list.add(node);
+                }
+            }
+        }
+        System.out.println("Crosscheck Horizontal: verticalList" + verticleList.stream().map(Node::display).collect(Collectors.joining(",")));
+
+        for (Integer key : map.keySet()) {
+            if (map.get(key).size() == 0) {
+                System.out.println(String.format("Crosscheck Horizontal: set value for node %d %d value %d", currentNode.getRow(), currentNode.getCol(), key));
+                currentNode.setValue(key);
+                currentNode.setPredictList(Collections.emptyList());
+                printTable();
+                fillAllPredictList();
+                return;
             }
         }
     }
@@ -163,8 +263,10 @@ public class Game {
             Arrays.stream(nodes)
                     .forEach(node -> {
                         if (node.getValue() == 0 && !node.getPredictList().isEmpty()) {
-                            System.out.println("cross check found");
+                            System.out.println("cross check found" + node.display());
                             isOnlyPossibleValueInRectangle(node);
+                            isOnlyPossibleValueInVertical(node);
+                            isOnlyPossibleValueInHorizontal(node);
                         }
                     });
         });
@@ -179,6 +281,7 @@ public class Game {
                         if (missingValue.size() == 1) {
                             node.setValue(missingValue.get(0));
                             System.out.println(String.format("set value for node %d %d value %d", node.getRow(), node.getCol(), node.getValue()));
+                            fillAllPredictList();
                         }
                     });
         });
@@ -196,7 +299,7 @@ public class Game {
         while (isNotFullFill()) {
             System.out.println("table not full fill");
             fillAllPredictList();
-//            crossCheck();
+            crossCheck();
             printTable();
         }
     }

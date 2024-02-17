@@ -50,4 +50,12 @@ public class Node {
         return String.format(template, text);
     }
 
+    public String display() {
+        return "Node{" +
+                "value=" + value +
+                ", col=" + col +
+                ", row=" + row +
+                ", predictList=" + predictList +
+                '}';
+    }
 }

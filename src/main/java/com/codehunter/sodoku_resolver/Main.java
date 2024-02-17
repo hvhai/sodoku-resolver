@@ -15,7 +15,7 @@ public class Main {
 
         Game game = new Game(content);
         // ============================
-//        Node[][] table = game.getTable();
+        Node[][] table = game.getTable();
 //        String collect = game.getRectangle(table[5][3]).stream()
 //                .map(String::valueOf)
 //                .collect(Collectors.joining(","));
@@ -28,7 +28,14 @@ public class Main {
 //        System.out.println(collect1);
 //        System.out.println("================");
 //        game.fillAllPredictList();
+
+//        game.buildTable();
 //        game.printTable();
+//        game.fillAllPredictList();
+//        Node node = table[2][2];
+//        game.isOnlyPossibleValueInRectangle(node);
+//        System.out.println("================");
+
         // ============================
         game.buildTable();
         game.printTable();
