@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class Game {
@@ -32,12 +33,16 @@ public class Game {
     private String content;
     private Node[][] table = new Node[9][9];
 
+    public Game(String content) {
+        this.content = content;
+    }
+
     public Node[][] getTable() {
         return table;
     }
 
     public void buildTable() {
-        String[] split = EXAMPLE1.split("\n");
+        String[] split = this.content.split("\n");
         for (int row = 0; row < split.length; row++) {
             char[] charArray = split[row].toCharArray();
             for (int col = 0; col < charArray.length; col++) {
@@ -62,6 +67,20 @@ public class Game {
             for (int j = colStart * 3; j < colStart * 3 + 3; j++) {
                 if (table[i][j].getValue() != 0) {
                     list.add(table[i][j].getValue());
+                }
+            }
+        }
+        return list;
+    }
+
+    public List<Node> getRectangleNode(Node node) {
+        List<Node> list = new ArrayList<>();
+        int colStart = node.getCol() / 3;
+        int rowStart = node.getRow() / 3;
+        for (int i = rowStart * 3; i < rowStart * 3 + 3; i++) {
+            for (int j = colStart * 3; j < colStart * 3 + 3; j++) {
+                if (table[i][j].getValue() != 0) {
+                    list.add(table[i][j]);
                 }
             }
         }
@@ -116,7 +135,39 @@ public class Game {
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
         System.out.println("missingList:" + missingList);
+
+
         return list;
+    }
+
+    void isOnlyPossibleValueInRectangle(Node currentNode) {
+        List<Integer> missingValues = currentNode.getPredictList();
+        List<Node> rectangleList = getRectangleNode(currentNode);
+        for(Integer value : missingValues) {
+            long numberOfPossibility = rectangleList.stream()
+                    .filter(node -> {
+                        return !currentNode.getCol().equals(node.getCol())
+                               && !currentNode.getRow().equals(node.getRow())
+                               && node.getPredictList().contains(value);
+                    })
+                    .count();
+            if (numberOfPossibility == 0) {
+                System.out.println(String.format("Crosscheck: set value for node %d %d value %d", currentNode.getRow(), currentNode.getCol(), currentNode.getValue()));
+                currentNode.setValue(value);
+            }
+        }
+    }
+
+    public void crossCheck() {
+        Arrays.stream(table).forEach(nodes -> {
+            Arrays.stream(nodes)
+                    .forEach(node -> {
+                        if (node.getValue() == 0 && !node.getPredictList().isEmpty()) {
+                            System.out.println("cross check found");
+                            isOnlyPossibleValueInRectangle(node);
+                        }
+                    });
+        });
     }
 
     public void fillAllPredictList() {
@@ -140,9 +191,12 @@ public class Game {
     }
 
     public void resolve() {
+        Scanner scanner = new Scanner(System.in);
+//        while (isNotFullFill() && scanner.nextInt() == 1) {
         while (isNotFullFill()) {
             System.out.println("table not full fill");
             fillAllPredictList();
+//            crossCheck();
             printTable();
         }
     }
